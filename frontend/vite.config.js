@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { resolve } from "path";
 import solidPlugin from "vite-plugin-solid";
 
 export default defineConfig({
@@ -8,5 +9,13 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
+  },
+  resolve: {
+    conditions: ["browser", "development"],
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./vitest.setup.js"],
   },
 });
