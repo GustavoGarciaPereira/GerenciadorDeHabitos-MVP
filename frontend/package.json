@@ -1,0 +1,19 @@
+{
+  "name": "habit-tracker-mvp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.3",
+    "@solidjs/router": "^0.14.7"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7",
+    "vite-plugin-solid": "^2.11.1"
+  }
+}
