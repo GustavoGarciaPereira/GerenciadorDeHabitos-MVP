@@ -7,10 +7,14 @@ import Loader from "../components/ui/Loader";
 import ErrorMessage from "../components/ui/ErrorMessage";
 
 export default function Home() {
-  const { state, fetchHabits } = useHabits();
+  const { state, fetchHabits, selectHabit } = useHabits();
 
   // Fetch habits on mount
   const [habitsResource] = createResource(fetchHabits);
+
+  function handleSelect(id) {
+    selectHabit(id);
+  }
 
   return (
     <div class="dashboard">
@@ -19,10 +23,19 @@ export default function Home() {
       </header>
 
       <div class="dashboard__body">
-        {/* Sidebar: form + progress placeholder */}
+        {/* Sidebar: form */}
         <aside class="dashboard__sidebar">
           <HabitForm />
-          <HabitGrid />
+
+          {/* Progress grid for selected habit */}
+          <Show when={state.selectedHabitId}
+                 fallback={
+                   <p class="dashboard__select-hint">
+                     Selecione um hábito para ver o progresso
+                   </p>
+                 }>
+            <HabitGrid habitId={state.selectedHabitId} />
+          </Show>
         </aside>
 
         {/* Main: habit list */}
@@ -50,7 +63,7 @@ export default function Home() {
               <For each={state.habits}>
                 {(habit) => (
                   <li>
-                    <HabitCard habit={habit} />
+                    <HabitCard habit={habit} onSelect={handleSelect} />
                   </li>
                 )}
               </For>

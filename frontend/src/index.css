@@ -302,6 +302,74 @@ ul {
   to   { transform: scale(1);    opacity: 1; }
 }
 
+/* ── Habit Grid ─────────────────────────────────────────────────────────────── */
+.habit-grid-wrapper {
+  margin-top: 1.5rem;
+}
+
+.habit-grid {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.habit-grid__cell-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.habit-grid__cell {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.habit-grid__cell--completed {
+  background: #2e7d32;
+}
+
+.habit-grid__cell--pending {
+  background: #e0e0e0;
+}
+
+.habit-grid__cell--today {
+  border: 2px solid #0071e3;
+}
+
+.habit-grid__label {
+  font-size: 0.65rem;
+  color: #555;
+  text-align: center;
+}
+
+.habit-streak {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #1d1d1f;
+}
+
+/* ── Optimistic state ──────────────────────────────────────────────────────── */
+.habit-card--optimistic .habit-card__title {
+  text-decoration: line-through;
+  color: #2e7d32;
+}
+
+.habit-card--optimistic .habit-card__check span {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.dashboard__select-hint {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #86868b;
+  font-size: 0.85rem;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .dashboard__body {

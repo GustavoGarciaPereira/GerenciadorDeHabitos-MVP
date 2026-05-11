@@ -1,32 +1,20 @@
 import { createSignal } from "solid-js";
 import { useHabits } from "../../store/habitStore";
 
-/**
- * Returns today's date in local timezone as YYYY-MM-DD.
- */
-function todayLocal() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 export default function HabitCard(props) {
-  const { completeHabit, deleteHabit } = useHabits();
-  const [completing, setCompleting] = createSignal(false);
+  const { toggleCompleteOptimistic, deleteHabit, isOptimistic } = useHabits();
   const [deleting, setDeleting] = createSignal(false);
 
-  async function handleComplete() {
-    setCompleting(true);
-    try {
-      await completeHabit(props.habit.id, todayLocal());
-    } finally {
-      setCompleting(false);
-    }
+  const optimistic = () => isOptimistic(props.habit.id);
+
+  async function handleComplete(e) {
+    // Prevent the click from bubbling up to the card's onClick
+    e.stopPropagation();
+    await toggleCompleteOptimistic(props.habit.id);
   }
 
-  async function handleDelete() {
+  async function handleDelete(e) {
+    e.stopPropagation();
     setDeleting(true);
     try {
       await deleteHabit(props.habit.id);
@@ -35,8 +23,18 @@ export default function HabitCard(props) {
     }
   }
 
+  function handleSelect() {
+    if (props.onSelect) props.onSelect(props.habit.id);
+  }
+
   return (
-    <div class="habit-card">
+    <div
+      class={`habit-card${optimistic() ? " habit-card--optimistic" : ""}`}
+      onClick={handleSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") handleSelect(); }}
+    >
       <div class="habit-card__header">
         <span
           class={`habit-card__badge habit-card__badge--${props.habit.frequency}`}
@@ -59,10 +57,10 @@ export default function HabitCard(props) {
       <label class="habit-card__check">
         <input
           type="checkbox"
+          checked={optimistic()}
           onChange={handleComplete}
-          disabled={completing()}
         />
-        <span>Concluir hoje</span>
+        <span>{optimistic() ? "Concluído ✓" : "Concluir hoje"}</span>
       </label>
     </div>
   );

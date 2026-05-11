@@ -12,6 +12,16 @@ export function useHabits() {
   return ctx;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function todayLocal() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 export function HabitProvider(props) {
@@ -19,7 +29,13 @@ export function HabitProvider(props) {
     habits: [],
     loading: false,
     error: null,
+    // Mission 2 additions
+    selectedHabitId: null,
+    progress: {},        // { [habitId]: HabitProgressOut }
+    optimisticCompletions: [],  // habit IDs optimistically completed today
   });
+
+  // ── Habit list ──────────────────────────────────────────────────────────
 
   /** Fetch habits from the backend and replace local state. */
   async function fetchHabits() {
@@ -54,28 +70,74 @@ export function HabitProvider(props) {
     }
   }
 
-  /** Delete a habit, then refresh the list. */
+  /** Delete a habit — optimistic removal from the local list. */
   async function deleteHabit(id) {
     setState({ error: null });
     try {
       await api.deleteHabit(id);
       setState("habits", (h) => h.filter((x) => x.id !== id));
+      // Clear selection if the deleted habit was selected
+      if (state.selectedHabitId === id) {
+        setState({ selectedHabitId: null });
+      }
     } catch (err) {
       setState({ error: err.message });
     }
   }
 
-  /** Mark a habit completed on a given date, then refresh. */
+  // ── Completion ──────────────────────────────────────────────────────────
+
+  /** Optimistic toggle: assume success immediately, roll back on error. */
+  async function toggleCompleteOptimistic(habitId) {
+    const dateString = todayLocal();
+    setState({ error: null });
+
+    // Optimistic add
+    setState("optimisticCompletions", (list) => [...list, habitId]);
+
+    try {
+      await api.completeHabit(habitId, dateString);
+      // Success — keep the optimistic flag; refetch progress if this habit is selected
+      if (state.selectedHabitId === habitId) {
+        await fetchProgress(habitId);
+      }
+    } catch (err) {
+      // Rollback
+      setState("optimisticCompletions", (list) => list.filter((id) => id !== habitId));
+      setState({ error: err.message });
+    }
+  }
+
+  /** Legacy complete (non-optimistic, for backward compatibility). */
   async function completeHabit(id, dateString) {
     setState({ error: null });
     try {
       await api.completeHabit(id, dateString);
-      // Refetch so any derived state stays in sync.
       await fetchHabits();
     } catch (err) {
       setState({ error: err.message });
     }
   }
+
+  // ── Selection & Progress ────────────────────────────────────────────────
+
+  /** Select a habit to view its progress grid. */
+  function selectHabit(id) {
+    setState({ selectedHabitId: id });
+  }
+
+  /** Fetch progress for a habit and store it keyed by habitId. */
+  async function fetchProgress(habitId) {
+    if (!habitId) return;
+    try {
+      const data = await api.getProgress(habitId);
+      setState("progress", habitId, data);
+    } catch (err) {
+      setState({ error: err.message });
+    }
+  }
+
+  // ── Value ───────────────────────────────────────────────────────────────
 
   const value = {
     state,
@@ -84,6 +146,11 @@ export function HabitProvider(props) {
     updateHabit,
     deleteHabit,
     completeHabit,
+    // Mission 2
+    toggleCompleteOptimistic,
+    selectHabit,
+    fetchProgress,
+    isOptimistic: (id) => state.optimisticCompletions.includes(id),
   };
 
   return (

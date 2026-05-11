@@ -2,24 +2,17 @@ import { render, screen, fireEvent } from '@solidjs/testing-library';
 import { describe, it, expect, vi } from 'vitest';
 import HabitCard from '../components/habits/HabitCard';
 
-const mockCompleteHabit = vi.fn().mockResolvedValue(undefined);
+const mockToggleComplete = vi.fn().mockResolvedValue(undefined);
 const mockDeleteHabit = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../store/habitStore', () => ({
   useHabits: () => ({
-    completeHabit: mockCompleteHabit,
+    toggleCompleteOptimistic: mockToggleComplete,
     deleteHabit: mockDeleteHabit,
+    isOptimistic: () => false,
     state: { error: null },
   }),
 }));
-
-function todayLocal() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return '' + yyyy + '-' + mm + '-' + dd;
-}
 
 describe('HabitCard', () => {
   beforeEach(() => {
@@ -37,18 +30,10 @@ describe('HabitCard', () => {
     expect(screen.getByText('Semanal')).toBeInTheDocument();
   });
 
-  it('calls completeHabit with today local date on checkbox change', () => {
+  it('calls toggleCompleteOptimistic with habit id on checkbox change', () => {
     render(() => <HabitCard habit={{ id: 1, title: 'Read', frequency: 'daily' }} />);
     fireEvent.change(screen.getByRole('checkbox'));
-    expect(mockCompleteHabit).toHaveBeenCalledWith(1, todayLocal());
-  });
-
-  it('disables checkbox while completing', () => {
-    mockCompleteHabit.mockImplementation(() => new Promise(() => {}));
-    render(() => <HabitCard habit={{ id: 1, title: 'Read', frequency: 'daily' }} />);
-    const cb = screen.getByRole('checkbox');
-    fireEvent.change(cb);
-    expect(cb).toBeDisabled();
+    expect(mockToggleComplete).toHaveBeenCalledWith(1);
   });
 
   it('calls deleteHabit on delete button click', () => {
